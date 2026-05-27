@@ -37,11 +37,14 @@ module.exports = async (req, res) => {
             return res.end(JSON.stringify({ error: "Missing image string parameter." }));
         }
 
-        // Clean up the base64 prefix
+        // Clean up the base64 prefix mapping boundary
         const rawBase64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
         const imgBinaryBuffer = Buffer.from(rawBase64Data, 'base64');
 
-        // 3. Fire the request using Node's native fetch (handles DNS and SNI perfectly)
+        // FIXED: Casting the Node Buffer into a clear Uint8Array so global fetch streams it perfectly
+        const standardizedBinaryStream = new Uint8Array(imgBinaryBuffer);
+
+        // 3. Fire the request using Node's native fetch
         const hfEndpoint = 'https://api-inference.huggingface.co/models/ai-forever/real-esrgan';
         
         const hfResponse = await fetch(hfEndpoint, {
@@ -50,7 +53,7 @@ module.exports = async (req, res) => {
                 'Authorization': `Bearer ${userApiKey}`,
                 'Content-Type': 'application/octet-stream'
             },
-            body: imgBinaryBuffer
+            body: standardizedBinaryStream // Native typed arrays stream flawlessly
         });
 
         // 4. Forward the response back to your website frontend
