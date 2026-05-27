@@ -41,11 +41,15 @@ module.exports = async (req, res) => {
         const rawBase64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
         const imgBinaryBuffer = Buffer.from(rawBase64Data, 'base64');
 
-        // FIXED: Pointing to the unified api.huggingface.co infrastructure
+        // UNIVERSAL INFERENCE INFRASTRUCTURE URL ROUTE
+        const targetUrlString = 'https://api-inference.huggingface.co/models/ai-forever/Real-ESRGAN';
+        const targetUrlObj = new URL(targetUrlString);
+
+        // Dynamically parsed properties eliminate string compilation drop anomalies
         const hfOptions = {
-            hostname: 'api.huggingface.co',
+            hostname: targetUrlObj.hostname,
             port: 443,
-            path: '/models/ai-forever/Real-ESRGAN',
+            path: targetUrlObj.pathname,
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${userApiKey}`,
@@ -75,7 +79,7 @@ module.exports = async (req, res) => {
 
         hfRequest.on('error', (err) => {
             res.statusCode = 500;
-            return res.end(JSON.stringify({ error: err.message }));
+            return res.end(JSON.stringify({ error: `Network connection fault: ${err.message}` }));
         });
 
         hfRequest.write(imgBinaryBuffer);
