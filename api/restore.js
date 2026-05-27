@@ -41,15 +41,15 @@ module.exports = async (req, res) => {
         const rawBase64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
         const imgBinaryBuffer = Buffer.from(rawBase64Data, 'base64');
 
-        // BYPASSING DNS ENOTFOUND BY TARGETING HUGGING FACE CLUSTER IPS DIRECTLY
+        // FIXED: Using lowercase standard path properties to clear case-sensitive router matches
         const hfOptions = {
             hostname: '18.232.174.195', 
             port: 443,
-            path: '/models/ai-forever/Real-ESRGAN',
+            path: '/models/ai-forever/real-esrgan', // Normalized to lowercase
             method: 'POST',
-            rejectUnauthorized: false, // Prevents SSL mismatches caused by targeting a direct IP address
+            rejectUnauthorized: false, 
             headers: {
-                'Host': 'api-inference.huggingface.co', // Tells the gateway where we want our packet routed
+                'Host': 'api-inference.huggingface.co', 
                 'Authorization': `Bearer ${userApiKey}`,
                 'Content-Type': 'application/octet-stream',
                 'Content-Length': imgBinaryBuffer.length
