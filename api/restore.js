@@ -1,8 +1,7 @@
-// Native Node https engine - requires no external node_modules packages
 const https = require('https');
 
 module.exports = async (req, res) => {
-    // 1. Force Global Permissive Handshake Headers
+    // Force Global Permissive Handshake Headers
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, x-hf-api-key');
@@ -19,7 +18,6 @@ module.exports = async (req, res) => {
     }
 
     try {
-        // 2. Safely capture data payload buffer arrays
         let bodyStr = '';
         if (typeof req.body === 'object') {
             bodyStr = JSON.stringify(req.body);
@@ -40,13 +38,12 @@ module.exports = async (req, res) => {
             return res.end(JSON.stringify({ error: "Missing image string parameter." }));
         }
 
-        // Isolate base64 raw chunk data
         const rawBase64Data = base64Image.includes(',') ? base64Image.split(',')[1] : base64Image;
         const imgBinaryBuffer = Buffer.from(rawBase64Data, 'base64');
 
-        // 3. Construct proxy request pipe options to Hugging Face Mainframe
+        // FIXED: Pointing to the unified api.huggingface.co infrastructure
         const hfOptions = {
-            hostname: 'api-inference.huggingface.co',
+            hostname: 'api.huggingface.co',
             port: 443,
             path: '/models/ai-forever/Real-ESRGAN',
             method: 'POST',
@@ -57,7 +54,6 @@ module.exports = async (req, res) => {
             }
         };
 
-        // Stream transaction directly past firewalls
         const hfRequest = https.request(hfOptions, (hfResponse) => {
             let dataChunks = [];
 
@@ -71,7 +67,6 @@ module.exports = async (req, res) => {
                     return res.end(JSON.stringify({ error: `HF Engine returned error context: ${completeResponseBuffer.toString()}` }));
                 }
 
-                // Return clean upscaled jpeg matrix block straight back to browser viewports
                 res.statusCode = 200;
                 res.setHeader('Content-Type', 'image/jpeg');
                 return res.end(completeResponseBuffer);
